@@ -63,17 +63,24 @@ def seed_tags(n):
 
 
 def get_posts(selected_tags):
-    # [["into"], ["institution", "new"], ["stuff"], "mean"]
+    # [["modern"], ["institution", "new"], ["stuff"], "mean"]
+    # WHERE tag = into OR stuff OR mean OR (institution AND new)
 
     single_tag_filter = Post.tags.any(Tag.name.in_(selected_tags.get('single_tags')))
-    # grouped_tag_filter = Post.tags.any(Tag.name == 'citizen')
-    grouped_tag_filter = and_(Post.tags.any(Tag.name == 'citizen'), Post.tags.any(Tag.name == 'customer'))
-    # Post.tags.any(Tag.name.in_(selected_tags.get('gro')))
-    # for tag_group in selected_tags.get('grouped_tags'):
-    #     for tag in tag_group:
-    #         grouped_tag_filter.filter(Tag.name == tag)
 
-    return session.query(Post).filter(or_(single_tag_filter, grouped_tag_filter)).options(joinedload("tags"))
+    # this works but I need to build a filter for each tag group
+    # each tag group has n number of tags
+    grouped_tag_filter_1 = and_(Post.tags.any(Tag.name == 'citizen'), Post.tags.any(Tag.name == 'customer'))
+    grouped_tag_filter_2 = and_(Post.tags.any(Tag.name == 'into'), Post.tags.any(Tag.name == 'simple'))
+
+    # this will return all posts tagged with tags in the single_tags list as well as
+    # posts tagged with both (citizen AND customer)
+    #
+    # for tag_group filtering to work, I'll need to build the grouped_tag_filter above for each tag group and
+    # pass it to `or_` below
+    return session.query(Post).filter(
+        or_(single_tag_filter, grouped_tag_filter_1, grouped_tag_filter_2)
+    ).options(joinedload("tags"))
 
 
 def get_tags():
