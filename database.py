@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, joinedload
 from faker import Faker
@@ -63,14 +63,17 @@ def seed_tags(n):
 
 
 def get_posts(selected_tags):
-    print("*" * 80)
-    # print('selected_tags', selected_tags)
-    print('single_tags', selected_tags.get('single_tags'))
-    print('grouped_tags', selected_tags.get('grouped_tags'))
-    print("*" * 80)
-    return session.query(Post).filter(
-        Post.tags.any(Tag.name.in_(selected_tags.get('single_tags')))
-    ).options(joinedload("tags"))
+    # [["into"], ["institution", "new"], ["stuff"], "mean"]
+
+    single_tag_filter = Post.tags.any(Tag.name.in_(selected_tags.get('single_tags')))
+    # grouped_tag_filter = Post.tags.any(Tag.name == 'citizen')
+    grouped_tag_filter = and_(Post.tags.any(Tag.name == 'citizen'), Post.tags.any(Tag.name == 'customer'))
+    # Post.tags.any(Tag.name.in_(selected_tags.get('gro')))
+    # for tag_group in selected_tags.get('grouped_tags'):
+    #     for tag in tag_group:
+    #         grouped_tag_filter.filter(Tag.name == tag)
+
+    return session.query(Post).filter(or_(single_tag_filter, grouped_tag_filter)).options(joinedload("tags"))
 
 
 def get_tags():
