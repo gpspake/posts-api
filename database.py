@@ -70,17 +70,14 @@ def get_posts(selected_tags):
 
     # this works but I need to build a filter for each tag group
     # each tag group has n number of tags
-    grouped_tag_filter_1 = and_(Post.tags.any(Tag.name == 'citizen'), Post.tags.any(Tag.name == 'customer'))
-    grouped_tag_filter_2 = and_(Post.tags.any(Tag.name == 'into'), Post.tags.any(Tag.name == 'simple'))
+    grouped_tag_filters = [
+        and_(Post.tags.any(Tag.name == 'citizen'), Post.tags.any(Tag.name == 'customer')),
+        and_(Post.tags.any(Tag.name == 'into'), Post.tags.any(Tag.name == 'simple'))
+    ]
 
-    # this will return all posts tagged with tags in the single_tags list as well as
-    # posts tagged with both (citizen AND customer)
-    #
-    # for tag_group filtering to work, I'll need to build the grouped_tag_filter above for each tag group and
-    # pass it to `or_` below
-    return session.query(Post).filter(
-        or_(single_tag_filter, grouped_tag_filter_1, grouped_tag_filter_2)
-    ).options(joinedload("tags"))
+    tags_filter = or_(single_tag_filter, *grouped_tag_filters)
+
+    return session.query(Post).filter(tags_filter).options(joinedload("tags"))
 
 
 def get_tags():
