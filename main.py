@@ -1,21 +1,16 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, ForeignKey, Table, Text
 from faker import Faker
 
-Session = sessionmaker(autoflush=False)
+from database import Session, Base
 
 fake = Faker()
 
-engine = create_engine('sqlite:///foo.db', echo=True)
-Session.configure(bind=engine)
+session = Session()
 
-sess = Session()
-
-Base = declarative_base()
-
-post_tag = Table('post_tag', Base.metadata,
+post_tag = Table(
+    'post_tag',
+    Base.metadata,
     Column('post_id', Integer, ForeignKey('post.id')),
     Column('tag_id', Integer, ForeignKey('tag.id'))
 )
@@ -48,30 +43,28 @@ def seed_posts(n):
         post = Post(name=post_name)
         tag = Tag(name=tag_name)
         post.tags.append(tag)
-        sess.add(post)
-        sess.commit()
+        session.add(post)
+        session.commit()
 
 
 def seed_tags(n):
     for n in range(n):
-        post = sess.query(Post).filter_by(id=n+1).first()
+        post = session.query(Post).filter_by(id=n + 1).first()
         tag_name = fake.word()
         tag = Tag(name=tag_name)
         post.tags.append(tag)
-        sess.add(post)
-        sess.commit()
+        session.add(post)
+        session.commit()
 
 
 def get_posts_by_tag_name(tag_name):
-    # posts = sess.query(Post).filter(Post.tags.any(name=tag_name))
-    posts = sess.query(Tag).filter_by(name=tag_name).first().posts
+    posts = session.query(Tag).filter_by(name=tag_name).first().posts
     for p in posts:
         print('Post name:', p.name)
 
 
 def get_posts_by_tag_id(tag_id):
-    # posts = sess.query(Post).filter(Post.tags.any(id=tag_id))
-    posts = sess.query(Tag).filter_by(id=tag_id).first().posts
+    posts = session.query(Tag).filter_by(id=tag_id).first().posts
     for p in posts:
         print('Post name:', p.name)
 
@@ -80,7 +73,7 @@ def get_posts_by_tag_names(tag_names):
     """
     Query posts that match any of the tags in a list of tag names
     """
-    posts = sess.query(Post).filter(Post.tags.any(Tag.name.in_(tag_names)))
+    posts = session.query(Post).filter(Post.tags.any(Tag.name.in_(tag_names)))
     for p in posts:
         print('Post name:', p.name)
 
