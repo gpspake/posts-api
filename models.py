@@ -8,9 +8,9 @@ class MyBase(BaseModel):
 
 
 class SelectedTags(MyBase):
-    single_tags: List[str]
-    grouped_tags: List[List[str]]
-    
+    single_tags: List[str] = []
+    grouped_tags: List[List[str]] = []
+
 
 class ITagBase(MyBase):
     id: int
@@ -28,3 +28,13 @@ class ITag(ITagBase):
 
 class IPost(IPostBase):
     tags: Optional[List[ITagBase]] = []
+
+
+class PostsResponseMeta(MyBase):
+    count: int
+    selected_tags: SelectedTags
+
+
+class PostsResponse(MyBase):
+    meta: PostsResponseMeta
+    posts: List[IPost]
