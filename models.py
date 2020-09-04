@@ -7,6 +7,11 @@ class MyBase(BaseModel):
         orm_mode=True
 
 
+class SelectedTags(MyBase):
+    single_tags: List[str]
+    grouped_tags: List[List[str]]
+    
+
 class ITagBase(MyBase):
     id: int
     name: str

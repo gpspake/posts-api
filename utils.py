@@ -1,7 +1,8 @@
+from models import SelectedTags
 import json
 
 
-def get_tags_from_string(tags_string):
+def get_tags_from_string(tags_string: str) -> SelectedTags:
     """
     takes a json string of single and grouped tag names and returns a dict
     with a flattened list of single tags and a list of grouped tags
@@ -10,7 +11,7 @@ def get_tags_from_string(tags_string):
     -> {'single_tags': ['stuff', 'table', 'time'], 'grouped_tags': [['customer', 'hello']]}
 
     :param tags_string: str
-    :return: {'single_tags': List[str], 'grouped_tags': List[List[str]]}
+    :return: SelectedTags
     """
 
     # deserialize json
@@ -44,7 +45,7 @@ def get_tags_from_string(tags_string):
                 single_tags.append(tag[0])
         return single_tags
 
-    return dict({
-        'single_tags': flatten_single_tags(list(filter(is_single_tag, tag_list))),
-        'grouped_tags': list(filter(lambda t: not is_single_tag(t), tag_list))
-    })
+    return SelectedTags(
+        single_tags=flatten_single_tags(list(filter(is_single_tag, tag_list))),
+        grouped_tags=list(filter(lambda t: not is_single_tag(t), tag_list))
+    )

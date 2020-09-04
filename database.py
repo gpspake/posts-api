@@ -6,6 +6,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, ForeignKey, Table, Text
 from sqlalchemy import or_, and_
 
+from models import SelectedTags
+
 fake = Faker()
 
 Session = sessionmaker(autoflush=False)
@@ -63,16 +65,16 @@ def seed_tags(n):
         session.commit()
 
 
-def get_tag_filters(selected_tags):
+def get_tag_filters(selected_tags: SelectedTags):
     """
     takes selected_tags dict and returns sqlalchemy filters
 
-    :param selected_tags: [{'single_tags': List[str], 'grouped_tags': List[List[str]]}]
+    :param selected_tags: SelectedTags
     :return:
     """
-    single_tag_filter = Post.tags.any(Tag.name.in_(selected_tags.get('single_tags')))
+    single_tag_filter = Post.tags.any(Tag.name.in_(selected_tags.single_tags))
     grouped_tag_filters = []
-    for tag_group in selected_tags.get('grouped_tags'):
+    for tag_group in selected_tags.grouped_tags:
         tag_group_filters = []
         for tag in tag_group:
             tag_group_filters.append(Post.tags.any(Tag.name == tag))
