@@ -14,7 +14,7 @@ async def root():
 
 @app.get("/posts", response_model=List[IPost])
 async def posts(tags: str = ''):
-    selected_tags = get_tags_from_string(tags)
+    selected_tags = get_tags_from_string(tags) if tags else None
     return get_posts(selected_tags).all()
 
 

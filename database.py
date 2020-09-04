@@ -1,9 +1,10 @@
-from sqlalchemy import create_engine, or_, and_
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, joinedload
 from faker import Faker
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, ForeignKey, Table, Text
+from sqlalchemy import or_, and_
 
 fake = Faker()
 
@@ -62,22 +63,40 @@ def seed_tags(n):
         session.commit()
 
 
-def get_posts(selected_tags):
-    # [["modern"], ["institution", "new"], ["stuff"], "mean"]
-    # WHERE tag = into OR stuff OR mean OR (institution AND new)
+def get_tag_filters(selected_tags):
+    """
+    takes selected_tags dict and returns sqlalchemy filters
 
+    :param selected_tags: [{'single_tags': List[str], 'grouped_tags': List[List[str]]}]
+    :return:
+    """
     single_tag_filter = Post.tags.any(Tag.name.in_(selected_tags.get('single_tags')))
+    grouped_tag_filters = []
+    for tag_group in selected_tags.get('grouped_tags'):
+        tag_group_filters = []
+        for tag in tag_group:
+            tag_group_filters.append(Post.tags.any(Tag.name == tag))
+        grouped_tag_filters.append(and_(*tag_group_filters))
+    return or_(single_tag_filter, *grouped_tag_filters)
 
-    # this works but I need to build a filter for each tag group
-    # each tag group has n number of tags
-    grouped_tag_filters = [
-        and_(Post.tags.any(Tag.name == 'citizen'), Post.tags.any(Tag.name == 'customer')),
-        and_(Post.tags.any(Tag.name == 'into'), Post.tags.any(Tag.name == 'simple'))
-    ]
 
-    tags_filter = or_(single_tag_filter, *grouped_tag_filters)
+def get_posts(selected_tags):
+    """
+    returns posts that match query params
 
-    return session.query(Post).filter(tags_filter).options(joinedload("tags"))
+    :param selected_tags: Optional[{'single_tags': List[str], 'grouped_tags': List[List[str]]}]
+                          List of single tags and grouped tags
+                          Ex: [["modern"], ["institution", "new"], ["stuff"], "mean"] ->
+                          posts tagged into OR stuff OR mean OR (institution AND new)
+    :return: List
+    """
+
+    posts_query = session.query(Post)
+    if selected_tags:
+        tag_filters = get_tag_filters(selected_tags)
+        posts_query = posts_query.filter(tag_filters)
+
+    return posts_query.options(joinedload("tags"))
 
 
 def get_tags():
